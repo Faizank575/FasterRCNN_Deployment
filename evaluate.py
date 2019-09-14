@@ -172,11 +172,9 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
             for (startX, startY, endX, endY) in pick:
                 roi=img[startY:endY,startX:endX]
                 black_bg[startY:endY,startX:endX]=roi
-            imsave(evaluated_image_path,black_bg)
-            image=imread('./Temp/evaluated_813c5ac2-4f2c-46a9-9b31-b30aa9cac2c3.jpg')
-            
-            result = image.copy()
-            image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+            result = black_bg.copy()
+            print(black_bg.shape)
+            image = cv2.cvtColor(black_bg, cv2.COLOR_RGB2HSV)
             lower = np.array([18, 0, 0])
             upper = np.array([179, 255, 255])
             mask = cv2.inRange(image, lower, upper)
@@ -184,12 +182,6 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
 
 
             imsave(evaluated_image_path, result)
-            # with open("./Temp/bboxes.txt",'w') as f:
-            #     data=''
-            #     for box in allboxes:
-            #         data+=str(box[0])+" "+str(box[1])+" "+ str(box[2])+ " "+ str(box[3])+"\n"
-            #     f.write(data)
-
         return evaluated_image_path
     else:
         raise ValueError("Unsupported value found in 'mode' parameter")
