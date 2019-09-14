@@ -10,19 +10,10 @@ from cntk import Trainer, load_model
 app = Flask(__name__)
 
 abs_path = os.path.dirname(os.path.abspath(__file__))
-# sys.path.append('C:\\Users\\FaizanKhan\\Anaconda3\\envs\\CNTK\lib\\site-packages\\cntk')
-# sys.path.append(os.path.join(abs_path,'utils'))
-# sys.path.append('C:\\Users\\FaizanKhan\\Anaconda3\\envs\\CNTK\lib\\site-packages\\cntk\\internal')
-
-# print(sys.path)
-# print(abs_path)
 outputpath=os.path.join(abs_path, "CNTKModels")
 model_path=os.path.join(outputpath, "spike.model")
-# model_path = os.path.join(cfg["CNTK"].MODEL_DIRECTORY, cfg["CNTK"].MODEL_NAME)
 print("Loading existing model from %s" % model_path)
-# loadedModel=C.Function.load(model_path)
 loadedModel = load_model(model_path)
-# print("model loaded")
 
 @app.errorhandler(404)
 def not_found(error):
