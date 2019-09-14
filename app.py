@@ -2,7 +2,7 @@
 from flask import Flask, jsonify, request, make_response, send_file
 import os,sys
 import base64
-# os.environ['PATH'] =os.environ['PATH']
+os.environ['PATH'] =os.environ['PATH']
 import uuid
 from config import cfg
 import cntk
