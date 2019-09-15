@@ -19,9 +19,17 @@ loadedModel = load_model(model_path)
 def not_found(error):
     return make_response(jsonify({'error': 'Not found'}), 404)
 
-@app.route('/', methods=['GET','POST'])
+@app.route('/')
 def index():
-    return {"message":"successful"}
+    return  "<html>" \
+            "<body>" \
+            "Hello, World!<br>" \
+            "This is a sample web service written in Python using <a href=""http://flask.pocoo.org/"">Flask</a> module.<br>" \
+            "Use one of the following urls to evaluate images:<br>" \
+            "<a href=""/hotelidentifier/api/v1.0/evaluate/returntags"">/hotelidentifier/api/v1.0/evaluate/returntags</a> - takes image as parameter and returns cloud of tags<br>" \
+            "<a href=""/hotelidentifier/api/v1.0/evaluate/returntags"">/hotelidentifier/api/v1.0/evaluate/returnimage</a> - takes image as parameter and returns tagged image<br>" \
+            "</body>" \
+            "</html>"
 
 
 @app.route('/hotelidentifier/api/v1.0/evaluate/returntags', methods=['POST'])
