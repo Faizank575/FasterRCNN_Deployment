@@ -7,12 +7,16 @@ from cntk import load_model, Axis, input_variable
 from cntk.core import Value
 from cntk.io import MinibatchData
 from cntk.layers import Constant
-
+from sklearn.linear_model import LinearRegression
 from utils.annotations.annotations_helper import parse_class_map_file
 from config import cfg
 from plot_helpers import visualizeResultsFaster, imsave, apply_nms_to_single_image_results,imread,imWidthHeight
 from cntk_helpers import regress_rois
 from nms import non_max_suppression_fast
+
+
+from models.user import SubmissionStore
+from models.user import UserModel
 
 
 ###############################################################
@@ -159,14 +163,10 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
                                          decisionThreshold=bgrPlotThreshold)
             # imsave(evaluated_image_path, img)
             allboxes=np.array(allboxes)
-            # orig = img.copy()
-            # loop over the bounding boxes for each image and draw them
-            # for (startX, startY, endX, endY) in allboxes:
-            #     cv2.rectangle(orig, (startX, startY), (endX, endY), (0, 0, 255), 2)
 
 	        # perform non-maximum suppression on the bounding boxes
             pick = non_max_suppression_fast(allboxes, 0.6)
-            print("[x] after applying non-maximum, %d bounding boxes" % (len(pick)))
+            # print("[x] after applying non-maximum, %d bounding boxes" % (len(pick)))
             black_bg = 0*np.ones_like(img)
 	        # loop over the picked bounding boxes and draw them
             for (startX, startY, endX, endY) in pick:
@@ -180,9 +180,71 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
             mask = cv2.inRange(image, lower, upper)
             result = cv2.bitwise_and(result,result, mask=mask)
 
+            lengthThroughRotatedRectangle=[]
+            lengthThroughManualCalculation=[]
 
-            imsave(evaluated_image_path, result)
-        return evaluated_image_path
+
+            # length Calculation through Rotated Rectangle
+            image=cv2.cvtColor(result,cv2.COLOR_BGR2GRAY)
+            ret,thresh = cv2.threshold(image,127,255,0)
+
+
+            working_image=thresh.copy()
+            result_img=thresh.copy()
+            working_image[:,:]=0
+            result_img[:,:]=0
+            kernel = np.ones((7,7), np.uint8)
+            for (startX, startY, endX, endY) in pick:
+                cord=(int(startX),int(startY),int(endX),int(endY))
+                working_image[:,:]=0
+                working_image[cord[1]:cord[3],cord[0]:cord[2]]=thresh[cord[1]:cord[3],cord[0]:cord[2]]
+                result_img[cord[1]:cord[3],cord[0]:cord[2]]=thresh[cord[1]:cord[3],cord[0]:cord[2]]
+                working_image=cv2.morphologyEx(working_image, cv2.MORPH_OPEN, kernel)
+                contours, hierarchy = cv2.findContours(working_image,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
+                if(len(contours)>0):
+                    c = max(contours, key = cv2.contourArea)
+                    rect = cv2.minAreaRect(c)
+                    (x, y), (width, height), angle=rect
+                    height=int(height)
+                    width=int(width)
+                    if width >height:
+                        height=width
+                    lengthThroughRotatedRectangle.append(height);
+
+
+            # length Calculation through Manual process
+            for (startX, startY, endX, endY) in pick:
+                cord=(int(startX),int(startY),int(endX),int(endY))
+                widthofRectangle=cord[2]-cord[0]
+                NonZeroPixels=[]
+                threshold=0.20;
+                height=0
+                width=0
+                for i in range(startY,endY):
+                    row=thresh[i,startX:endX]
+                    NonZeroPixelsInRow=np.count_nonzero(row)
+                    WidthRatioInRow=NonZeroPixelsInRow/widthofRectangle
+                    if(WidthRatioInRow>threshold):
+                        height=height+1
+                        NonZeroPixels.append(NonZeroPixelsInRow)
+                width=round(sum(NonZeroPixels)/len(NonZeroPixels))
+                if(width > height):
+                    height=width
+                lengthThroughManualCalculation.append(height)
+
+
+            # print("length through rotatedRectangle\n",lengthThroughRotatedRectangle)
+            # print("length through ManualCalculation\n",lengthThroughManualCalculation)
+
+            SpikesLength=[int((a+b)/2) for a,b in zip(lengthThroughRotatedRectangle,lengthThroughManualCalculation)]
+            # print("spike length\n",SpikesLength)
+
+            
+            SpikesLength = [i * 0.1 for i in SpikesLength]
+            print("Spike Lenght in cm",SpikesLength)
+
+            # imsave(evaluated_image_path, thresh)
+        return SpikesLength
     else:
         raise ValueError("Unsupported value found in 'mode' parameter")
 
@@ -191,7 +253,7 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
 
 
 # mode="returnimage" or "returntags"
-def evaluateimage(file_path, mode, eval_model=None):
+def evaluateimage(app,file_path, mode,username,regressionModel, eval_model=None):
 
     #from plot_helpers import eval_and_plot_faster_rcnn
     if eval_model==None:
@@ -206,5 +268,25 @@ def evaluateimage(file_path, mode, eval_model=None):
                               nmsThreshold=cfg["CNTK"].RESULTS_NMS_THRESHOLD,
                               nmsConfThreshold=cfg["CNTK"].RESULTS_NMS_CONF_THRESHOLD,
                               bgrPlotThreshold=cfg["CNTK"].RESULTS_BGR_PLOT_THRESHOLD)
-    return results
+    
+    results=np.array(results)
+    results=results.reshape(-1,1)
+
+    y_pred = regressionModel.predict(results)
+    predictedValues=sum(y_pred)
+    print(predictedValues)
+    (quotient,remainder)=divmod(predictedValues,1000)
+    WeightInGrams=(quotient*45) +((remainder/1000) * 45)
+    WeightInGrams=WeightInGrams[0]
+    print(int(WeightInGrams))
+    print(file_path)
+    imageName=str(file_path).split("\\")[-1]
+    with app.app_context():
+        user=UserModel.find_by_username(username)
+        print(user)
+        print(file_path)
+        submission='submission2'
+        submission=SubmissionStore(title=submission,imageurl=imageName,weight=WeightInGrams,user=user.username)
+        submission.save_to_db()
+    return predictedValues
 
