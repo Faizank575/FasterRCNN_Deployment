@@ -168,7 +168,7 @@ def eval_faster_rcnn(eval_model, imgPath, img_shape,
             pick = non_max_suppression_fast(allboxes, 0.6)
             # print("[x] after applying non-maximum, %d bounding boxes" % (len(pick)))
             black_bg = 0*np.ones_like(img)
-	        # loop over the picked bounding boxes and draw them
+	        # loop over the picked bounding boxes and extract each of the box
             for (startX, startY, endX, endY) in pick:
                 roi=img[startY:endY,startX:endX]
                 black_bg[startY:endY,startX:endX]=roi

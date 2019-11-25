@@ -12,12 +12,6 @@ class UserModel(db.Model):
         self.username = username
         self.password=password
         self.phoneNo = phoneNo
-    
-    def json(self):
-        return {
-            'username': self.username,
-            'phoneNo':self.phoneNo
-        }
 
     def save_to_db(self):
         db.session.add(self)
@@ -35,9 +29,12 @@ class UserModel(db.Model):
     def find_by_phoneNo(cls,phoneNo):
         return cls.query.filter_by(phoneNo=phoneNo).first()
 
+
+
+
+
 class SubmissionStore(db.Model):
     __tablename__ = 'submission'
-
 
     id = db.Column(db.Integer, primary_key=True)
     title1 = db.Column(db.String(80))
@@ -52,19 +49,11 @@ class SubmissionStore(db.Model):
         self.user_id=user
 
     def json(self):
-        return {
-            'title': self.title1,
-            'imageurl': self.imageurl,
-            'estimation':self.estimation
-        }
+        return { 'title': self.title1, 'imageurl': self.imageurl, 'estimation':self.estimation }
 
     @classmethod
     def find_by_username(cls, username):
         return cls.query.filter_by(user_id=username)
-
-    @classmethod
-    def find_all(cls):
-        return cls.query.all()
 
     def save_to_db(self):
         db.session.add(self)
@@ -73,3 +62,7 @@ class SubmissionStore(db.Model):
     def delete_from_db(self):
         db.session.delete(self)
         db.session.commit()
+
+    @classmethod
+    def find_all(cls):
+        return cls.query.all()

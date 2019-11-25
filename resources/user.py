@@ -35,7 +35,6 @@ _user_parser.add_argument('phoneNo',
 
 class UserRegister(Resource):
     def post(self):
-        # data = _user_parser.parse_args()
         username=request.values.get('username')
         password=request.values.get('password')
         phoneNo=request.values.get('phoneNo')
@@ -70,25 +69,17 @@ class User(Resource):
 class UserLogin(Resource):
     @classmethod
     def post(cls):
-        # get data from parser
-        # data = _user_parser.parse_args()
         username=request.values.get('username')
         password=request.values.get('password')
 
         # find user in database
         user = UserModel.find_by_username(username)
 
-        # this is what the 'authenticate()' function used to do
         if user and safe_str_cmp(user.password, password):
-            # identity = is what the 'identity()' function used to do
-            access_token = create_access_token(identity=user.username, fresh=True)
-            refresh_token = create_refresh_token(user.username)
             return {
                 'error':False,
                 'username':user.username,
                 'phoneNo':user.phoneNo,
-                'access_token': access_token,
-                'refresh_token': refresh_token
             }, 200
         return {'message': 'Invalid credentials'}, 401
 
@@ -146,6 +137,6 @@ class setNewPassword(Resource):
             user.save_to_db()
             return {'error':False, 'message':'Password Updated'},200
         else:
-             return {'error':True, 'message':'Your process couldn\'t be completed due to some error.'}, 400
+            return {'error':True, 'message':"Your process couldn\'t be completed due to some error.'}, 400
 
 
