@@ -7,6 +7,6 @@ https://cntk.ai/PythonWheel/CPU-Only/cntk-2.1-cp35-cp35m-win_amd64.whl
 Flask==0.12.2
 numpy==1.11.2
 matplotlib==1.5.3
-ipython==6.2.0
+ipython==7.16.3
 Pillow==4.1.1
 PyYAML==3.12
