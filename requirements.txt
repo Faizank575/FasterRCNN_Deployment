@@ -5,7 +5,7 @@ https://pypi.python.org/packages/be/5c/670e88bc3ae6afa23c1f09d52a77bbbc7d2e476e7
 https://cntk.ai/PythonWheel/CPU-Only/cntk-2.1-cp35-cp35m-win_amd64.whl
 #https://cntk.ai/PythonWheel/GPU/cntk_gpu-2.7.post1-cp35-cp35m-linux_x86_64.whl
 Flask==0.12.2
-numpy==1.11.2
+numpy==1.22.0
 matplotlib==1.5.3
 ipython==6.2.0
 Pillow==4.1.1
